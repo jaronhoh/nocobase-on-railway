@@ -58,10 +58,13 @@ jobs:
       - name: Validate PostgreSQL configuration examples
         run: |
           pnpm exec prettier config.example.yml --check
-          for key in DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD; do
+          for key in DB_HOST DB_PORT DB_DATABASE DB_USERNAME; do
             grep -q "^${key}=" .env.postgres.example
           done
-          ! grep -Eq '^DB_PASSWORD=[^[:space:]#]+' .env.postgres.example
+          grep -q 'DB_PASSWORD' .env.postgres.example
+          ! grep -Eq '^DB_PASSWORD=' .env.postgres.example
+          grep -q 'DB_DIALECT' config.example.yml
+          grep -q 'dialect: postgres' config.example.yml
 
       - name: Package check
         run: pnpm check:packages
