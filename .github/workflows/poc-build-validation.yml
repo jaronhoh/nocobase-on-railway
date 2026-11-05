@@ -59,7 +59,7 @@ jobs:
         run: |
           pnpm exec prettier config.example.yml --check
           for key in DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD; do
-            grep -q "^\${key}=" .env.postgres.example
+            grep -q "^${key}=" .env.postgres.example
           done
           ! grep -Eq '^DB_PASSWORD=[^[:space:]#]+' .env.postgres.example
 
