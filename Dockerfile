@@ -45,7 +45,7 @@ RUN test -f pnpm-lock.yaml || { \
     }
 # Installs this application and the workspace packages it depends on, and nothing else in the repository. The
 # application is selected by its package name, which in a generated application is simply the root project.
-RUN --mount=type=cache,target=/pnpm/store \
+RUN --mount=type=cache,id=s/79044541-c7f0-4999-be9c-385880bedecb-/pnpm/store,target=/pnpm/store \
     pnpm install --frozen-lockfile --filter "$(node -p "require('./${APP_DIR}/package.json').name")..."
 # `pnpm build` typechecks and bundles the client before it builds the workspace packages the server needs, so on a
 # clean checkout their `dist` has to exist first. In a generated application nothing matches and this does nothing.
@@ -55,7 +55,7 @@ WORKDIR /src/${APP_DIR}
 ARG TARGETARCH
 # Only source builds consume this; prebuilt assets already contain their base URL.
 ARG CDN_BASE_URL
-RUN --mount=type=cache,target=/pnpm/store \
+RUN --mount=type=cache,id=s/79044541-c7f0-4999-be9c-385880bedecb-/pnpm/store,target=/pnpm/store \
     case "${TARGETARCH}" in \
       amd64) target=linux-x64 ;; \
       arm64) target=linux-arm64 ;; \
