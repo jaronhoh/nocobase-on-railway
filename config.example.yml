@@ -150,8 +150,12 @@ database:
   default: main
   connections:
     main:
-      dialect: sqlite
-      database: database.sqlite
+      dialect: postgres
+      host: ${DB_HOST}
+      port: 5432
+      database: ${DB_DATABASE}
+      username: ${DB_USERNAME}
+      password: ${DB_PASSWORD}
       debug: false
       # For Oracle, use dialect: oracle and replace database with serviceName: FREEPDB1.
       # For SQL Server, use dialect: mssql and configure encrypt and trustServerCertificate.
