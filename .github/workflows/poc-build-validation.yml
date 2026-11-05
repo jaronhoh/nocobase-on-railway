@@ -1,0 +1,85 @@
+name: PoC Build Validation
+
+on:
+  push:
+    branches:
+      - poc/it-asset-management
+    paths:
+      - '.github/workflows/poc-build-validation.yml'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'config.example.yml'
+      - '.env.postgres.example'
+      - '**/*.ts'
+      - '**/*.tsx'
+      - '**/*.js'
+      - '**/*.mjs'
+      - '**/*.json'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout PoC branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Set up pnpm 11.7.0
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.7.0
+          run_install: false
+
+      - name: Show tool versions
+        run: |
+          node --version
+          pnpm --version
+
+      - name: Refresh lockfile only
+        run: pnpm install --lockfile-only
+
+      - name: Install from refreshed lockfile
+        run: pnpm install --frozen-lockfile
+
+      - name: Confirm PostgreSQL driver version and module resolution
+        run: |
+          node --input-type=module -e "import('@nocobase/db-postgres').then(() => console.log('@nocobase/db-postgres@0.1.0-beta.5 resolved and loaded'))"
+          pnpm list @nocobase/db-postgres --depth 0
+
+      - name: Validate PostgreSQL configuration examples
+        run: |
+          pnpm exec prettier config.example.yml --check
+          for key in DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD; do
+            grep -q "^\${key}=" .env.postgres.example
+          done
+          ! grep -Eq '^DB_PASSWORD=[^[:space:]#]+' .env.postgres.example
+
+      - name: Package check
+        run: pnpm check:packages
+
+      - name: TypeScript
+        run: pnpm typecheck
+
+      - name: ESLint
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
+
+      - name: Upload refreshed lockfile
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: poc-pnpm-lockfile
+          path: pnpm-lock.yaml
+          if-no-files-found: error
+          retention-days: 14
